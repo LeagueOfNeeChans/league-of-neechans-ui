@@ -202,15 +202,26 @@ public class UICore implements KeyListener, MouseListener, MouseMotionListener {
 		System.out.println("ATTEMPTING TO REMOVE ACTOR " + name);
 		
 		AnimatedElement actor = actors.get(name);
-		
 		if (actor == null) {
 			System.out.println("UNABLE TO FIND ACTOR WITH NAME: " + name);
 			return;
 		}
 		
-		// Need to mark for deletion
+		// Fade out
 		actor.setTransition(new FadeOut(true));
-		lastMonitorable = actor;
+		
+		// Wait for fade out
+		while (actor.isBusy()) {
+			try {
+				Thread.sleep(0);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		// Mark for deletion
+		actor.markForDeletion();
 	}
 	
 	/**
