@@ -1,92 +1,46 @@
 package com.trinary.vn.screen;
 
-import java.awt.Canvas;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.image.BufferStrategy;
 import java.util.HashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.swing.JFrame;
-import javax.swing.WindowConstants;
-import javax.xml.bind.JAXBException;
-
-import com.text.formatted.elements.PositionedElement;
-import com.trinary.ui.config.ConfigHolder;
-import com.trinary.ui.config.ResourceStore;
+import com.trinary.text.PositionedElement;
 import com.trinary.ui.elements.AnimatedElement;
 import com.trinary.ui.elements.ChoiceBox;
 import com.trinary.ui.elements.ContainerElement;
 import com.trinary.ui.elements.FormattedTextElement;
-import com.trinary.ui.elements.Monitorable;
 import com.trinary.ui.elements.ResourceElement;
+import com.trinary.ui.simple.UI;
 import com.trinary.ui.transitions.FadeOut;
 import com.trinary.ui.transitions.FadeOutIn;
 import com.trinary.util.EventCallback;
-import com.trinary.util.LayoutLoader;
 import com.trinary.util.Location;
 
-@SuppressWarnings("restriction")
-public class UICore implements KeyListener, MouseListener, MouseMotionListener {
-	// Java UI Elements
-	private JFrame frame;
-	private Canvas canvas;
-	private Boolean running = true;
-	private Boolean paused = false;
+public class UICore extends UI {
+	// State variables
+	private boolean paused = false;
 	
-	// Strategy for double buffering
-	private BufferStrategy strategy;
-	
-	// Trinary UI Elements
-	private ContainerElement container;
+	// Trinary elements
 	private ResourceElement curtain;
 	private AnimatedElement scene;
 	private FormattedTextElement textBox;
 	private ChoiceBox choiceBox;
-	private HashMap<String, AnimatedElement> actors = new HashMap<>();
+	private HashMap<String, AnimatedElement> actors;
 	
 	// Actor positions
-	private HashMap<String, ActorPosition> actorPositions = new HashMap<>();
-	
-	// Last monitorable
-	private Monitorable lastMonitorable;
-	
-	// Callback for marked functions
-	private EventCallback callback = null;
-	
-	// Rendering thread
-	private Thread renderThread = new Thread() {
-		@Override
-		public void run() {
-			mainLoop();
-		}
-	};
+	private HashMap<String, ActorPosition> actorPositions;
 	
 	/**
-	 * Setup our Visual Novel UI
+	 * Setup all custom content in this UI before the thread starts.
 	 */
-	public UICore() {		
-		this("layout.xml");
-	}
-	
-	public UICore(String layoutFile) {
-		// Configure UI and add resources
-		ConfigHolder.setConfig("rootDirectory", "resources/");
-		ResourceStore.addFolder("vn");
+	@Override
+	protected void customSetup() {
+		// Initialize actors
+		actors = new HashMap<>();
+		actorPositions = new HashMap<>();
 		
-		try {
-			container = LayoutLoader.processLayout(layoutFile);
-		} catch (JAXBException e) {
-			e.printStackTrace();
-		}
-		
-		container.sortChildrenByZIndex();
-		
+		// Mark UI elements with class attributes
 		scene     = (AnimatedElement)ContainerElement.getElementByName("scene");
 		curtain   = (ResourceElement)ContainerElement.getElementByName("curtain");
 		textBox   = (FormattedTextElement)ContainerElement.getElementByName("textBox");
@@ -95,54 +49,8 @@ public class UICore implements KeyListener, MouseListener, MouseMotionListener {
 		// Set up actor positions
 		actorPositions.put("right", new ActorPosition("right: 100%, bottom: 100%", 1, 1.0));
 		actorPositions.put("left",  new ActorPosition("left:  0%, bottom: 100%", 1, 1.0));
-		
-		// Set up Java container
-		frame = new JFrame("League of Nee-chans");
-		frame.setPreferredSize(new Dimension(container.getWidth(), container.getHeight()));
-		frame.addKeyListener(this);
-		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		
-		// Set up drawing surface
-		canvas = new Canvas();
-		canvas.setPreferredSize(new Dimension(container.getWidth(), container.getHeight()));
-		canvas.setVisible(true);
-		canvas.setFocusable(false);
-		canvas.addMouseListener(this);
-		canvas.addMouseMotionListener(this);
-		
-		// Add drawing surface to Java container
-		frame.setResizable(false);
-		frame.add(canvas);
-		frame.pack();
-		frame.setVisible(true);
-		
-		// Create buffer strategy
-		canvas.createBufferStrategy(2);
-		strategy = canvas.getBufferStrategy();
-		
-		// Start the thread
-		renderThread.start();
 	}
-	
-	/**
-	 * Render each frame of the game here
-	 */
-	protected void mainLoop() {
-		Graphics2D g = (Graphics2D)strategy.getDrawGraphics();
-		
-		// Run the main loop
-		while (running) {
-			paint(g);
-		}
-	}
-	
-	protected void paint(Graphics2D g) {
-		g.drawImage(container.render(), null, 0, 0);
-		
-		strategy.show();
-		try { Thread.sleep(10); } catch (Exception e) {}
-	}
-	
+
 	/**
 	 * Change the scene to the named scene
 	 * 
