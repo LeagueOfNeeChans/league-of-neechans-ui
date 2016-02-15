@@ -290,13 +290,13 @@ public class UICore extends UI {
 	 */
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		System.out.println("CLICKED AT: " + e.getX() + ", " + e.getY());
+		System.out.println("CLICKED AT: " + (int)Math.round(e.getX()/currentScaleX) + ", " + (int)Math.round(e.getY()/currentScaleY));
 		
 		CopyOnWriteArrayList<PositionedElement> marked = PositionedElement.getMarked();
 		
 		synchronized(marked) {
 			for (PositionedElement element : marked) {
-				if (element.rectangleContains(e.getX(), e.getY())) {
+				if (element.rectangleContains((int)Math.round(e.getX()/currentScaleX), (int)Math.round(e.getY()/currentScaleY))) {
 					System.out.println(String.format("\t\tCLICKED ON MONITORED ELEMENT %s!", element.getId()));
 					
 					choiceBox.setTransparency(0.0f);
@@ -320,7 +320,7 @@ public class UICore extends UI {
 		CopyOnWriteArrayList<PositionedElement> marked = PositionedElement.getMarked();
 		synchronized(marked) {
 			for (PositionedElement element : marked) {
-				if (element.rectangleContains(e.getX(), e.getY())) {
+				if (element.rectangleContains((int)Math.round(e.getX()/currentScaleX), (int)Math.round(e.getY()/currentScaleY))) {
 					choiceBox.highlight(element.getId());
 				}
 			}
